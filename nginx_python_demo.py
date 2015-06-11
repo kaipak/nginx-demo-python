@@ -1,15 +1,11 @@
 #!/usr/bin/python
 """
-    Auto set up basic nginx environment that'll serve a Puppet page and
-    hopefully show I know what I'm doing!  Only very basic error correction here.
-    Assuming working network and properly configured host, should work ok though.
-    
-    Added beginning bits to handle other Linux distros but this is incomplete.
+    Set up basic nginx environment with simple webpage
     
     Tested with following OSes:
     -Ubuntu
+    -RHEL
     
-    -Version 1.0
     -Kai Pak
     -16-Feb-15
 
@@ -110,12 +106,12 @@ def config_nginx():
 def get_OS():
     if os.path.isfile('/etc/lsb-release'):
         return 'ubuntu'
-    #elif os.path.isfile('/etc/redhat-release'):
-    #    return 'rhel'
-    #elif os.path.isfile('/etc/centos-release'):
-    #    return 'rhel'
-    #elif os.path.isfile('/etc/fedora-release'):
-    #    return 'rhel'
+    elif os.path.isfile('/etc/redhat-release'):
+        return 'rhel'
+    elif os.path.isfile('/etc/centos-release'):
+        return 'rhel'
+    elif os.path.isfile('/etc/fedora-release'):
+        return 'rhel'
     else:
         print 'This doesn\'t seem to be an OS I support (Ubuntu based).  Sorry.\n'
         exit(1)
@@ -125,7 +121,6 @@ def get_OS():
 def inst_pkgs(os_type):
     print '\nChecking required packages...'
     # Package install for Debian
-    # Written to make it easily understandable!
     if os_type == 'ubuntu':
         # Update package lists
         print 'Updating package lists...\n'
@@ -157,7 +152,11 @@ def inst_pkgs(os_type):
             print 'wget installed.'
         
     elif os_type == 'rhel':
-        call(["yum", "install", NGINXPKG])
+        try:
+            call(["yum", "install", NGINXPKG])
+        except:
+            print "Unable to install packages. Bailing script."
+            exit(2)
         
     print '\n\n' 
     
@@ -166,7 +165,7 @@ def main():
     if not os.geteuid() == 0:
         sys.exit("\nMust be root to run this script\n")
         
-    print "\n***Autosetup for nginx... thanks for the homework Puppet Labs!***"
+    print "\n***Autosetup for nginx***\n" 
     
     os_type = get_OS()
     pkgmgr = ''
