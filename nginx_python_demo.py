@@ -7,8 +7,6 @@
     -RHEL
     
     -Kai Pak
-    -16-Feb-15
-
 """
 
 import os, sys, os.path, time, filecmp
@@ -29,10 +27,10 @@ WEBPAGE = '/data/www/puppet/index.html'
 UNIXTIME = str(time.time())
 DEVNULL = open(os.devnull, 'w')
 
+def cleanup(file1, file2):
 # Clean up a backed up file if it's the same thing as what's replaced it
 # Compare file1 to file2, if the same will delete file2.
 #
-def cleanup(file1, file2):
     try:
         if filecmp.cmp(file1, file2):
             print file1, 'and', file2, 'have identical content.  Deleting', file2
@@ -40,10 +38,10 @@ def cleanup(file1, file2):
     except IOError:
         print 'File not found, skipping this clean-up step.'
     
-# Get webpage from Puppet's github page
+def config_nginx():
+# Get webpage from github
 # Configure basic nginx to serve on port 8000
 #
-def config_nginx():
     
     # Create directory to hold page if it doesn't exist
     if not os.path.exists(WEBDIR):
@@ -65,7 +63,8 @@ def config_nginx():
         exit(2)
     
     # Now create nginx configuration file to serve up the webpage we just got. Copy off a version
-    # if the configuration file already exists.
+    # if the configuration file already exists. Ensure idempotency.
+    #
     if os.path.isfile(PUPPETCONF):
         print "Previous nginx config file found.  Will replace, but copy off version ending in",\
               UNIXTIME, '\n'
@@ -93,6 +92,7 @@ def config_nginx():
     print "\nBouncing nginx...\n"
     call([SERVICE,NGINXPKG, "restart"])
     
+    # Idempotency, remove files only if same as previous version
     print '\nCleaning up unneeded files...\n'
     if os.path.isfile(PUPPETCONF + "." + UNIXTIME):
         cleanup(PUPPETCONF, PUPPETCONF + "." + UNIXTIME)
